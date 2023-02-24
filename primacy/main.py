@@ -4,11 +4,12 @@ import os
 from collection import get_primer_collection
 from primer_score import get_primer_ranked_primers
 from optimize import run_optimization
+from primer_zone import get_primer_zones
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
 logger = logging.getLogger('vast')
 
-@click.group()
+@click.group(context_settings=dict(show_default=True))
 @click.option('--debug/--no-debug', default=False)
 def cli(debug):
     if debug:
@@ -19,7 +20,7 @@ def cli(debug):
 
 
 
-@cli.command()
+@cli.command(context_settings=dict(show_default=True))
 @click.argument(
     'SEQ_NAME',
     type=click.STRING
@@ -60,7 +61,7 @@ def primer_collection(seq, seq_name, orientation, output, max_size, min_size):
         seq, seq_name, orientation, min_size, max_size)
     df.to_csv(output, sep='\t', index=False)
     
-@cli.command()
+@cli.command(context_settings=dict(show_default=True))
 @click.argument(
     'primer_collection',
     type=click.Path(exists=True, file_okay=True, dir_okay=False, allow_dash=True))
@@ -144,7 +145,7 @@ def primer_ranking(
     primers.to_csv(outfile, sep="\t", index=False)
     
 
-@cli.command()
+@cli.command(context_settings=dict(show_default=True))
 @click.argument(
     'SCORED_PRIMERS', nargs=-1
 )
@@ -180,6 +181,57 @@ def optimize(
             scored_primers, required_primers, seed,
             iterations, kmer)
     res.to_csv(outfile, sep='\t', index=False)
+
+
+
+@cli.command(context_settings=dict(show_default=True))
+@click.argument(
+    'MULTIFASTA',
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, allow_dash=False))
+@click.argument(
+    'OUTFILE',
+    type=click.Path(
+        exists=False, file_okay=True, dir_okay=False, writable=True))
+@click.option(
+    '--amp-start', '-b',
+    type=click.IntRange(min=0), required=True,
+    help="Start position (inclusive) of the region to amplify"
+)
+@click.option(
+    '--amp-stop', '-e',
+    type=click.IntRange(min=0), required=True,
+    help="End position (inclusive) of the region to amplify"
+)
+@click.option(
+    "--flank-size", '-f',
+    type=click.IntRange(min=0), default=100,
+    help="Maximum size of the upstream and downstream region.")
+@click.option(
+    "--amp-name", '-n',
+    type=click.STRING, default="",
+    help="Name added to header in fasta file. Header is formated as '>{AMP_NAME}_{AMP_START}_{AMP_STOP}'. "
+)
+@click.option(
+    "--ignore-genome", '-x',
+    multiple=True, default=[],
+    help="Ignore genome when identifying ambiguous bases. Repeat option to ignore multiple genomes."
+)
+def primer_zones(
+        multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genome):
+    """
+    Extract ampicon sequence and upstream and downstream primer zones from fasta given 
+    the start and stop positions of the amplicon and flank size. A multifasta alignment 
+    file can be provided and ambiguous bases will be included where there is variation
+    in the alignment. Troublesome genomes (those that introduce too many ambiguous bases)
+    can be ignored using the ignore_genome argument. IMPORTANT NOTE: this is meant to handle
+    only signle nucleotide polymorphisms, insertions and deletions in the primer zones
+    will need to dealt with separately. For this reason, the alignments should be to a reference
+    sequence that has no gaps in the sequence.
+    """
+    get_primer_zones(multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genome)
+
+
+
 
 if __name__ == '__main__':
     cli()
