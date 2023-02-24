@@ -218,7 +218,7 @@ def optimize(
 )
 @click.option(
     "--ignore-percent", '-p',
-    type=click.IntRange(min=0, max=1), default=0,
+    type=click.FloatRange(min=0, max=100), default=0,
     help="Ignore variants with frequencies less than IGNORE_PERCENT"
 )
 def primer_zones(
