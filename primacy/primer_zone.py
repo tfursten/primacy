@@ -10,12 +10,13 @@ LOGGER = logging.getLogger('primacy')
 
 
 def remove_ignored_genomes(align, ignore_genomes):
-    align_minus_ignored = MultipleSeqAlignment([])
+    seqs = []
     for genome in align:
         if genome.id in ignore_genomes:
             LOGGER.info("Removing genome from alignment {}".format(genome.id))
         else:
-            align_minus_ignored.add_sequence(genome.id, str(genome.seq).upper())
+            seqs.append(SeqRecord(Seq(genome.seq.upper()), id=genome.id))
+    align_minus_ignored = MultipleSeqAlignment(seqs)
     return align_minus_ignored
     
         
