@@ -15,7 +15,7 @@ def remove_ignored_genomes(align, ignore_genomes):
         if genome.id in ignore_genomes:
             LOGGER.info("Removing genome from alignment {}".format(genome.id))
         else:
-            seqs.append(SeqRecord(Seq(genome.seq.upper()), id=genome.id))
+            seqs.append(SeqRecord(genome.seq.upper(), id=genome.id))
     align_minus_ignored = MultipleSeqAlignment(seqs)
     return align_minus_ignored
     
@@ -34,18 +34,22 @@ def get_zone_positions(multifasta, amp_start, amp_stop, flank_size):
     return zone_start, zone_stop, amp_start - zone_start, amp_stop - zone_start
 
 
-def get_consensus_sequence(align):
+def get_consensus_sequence(align, ignore_percent):
     seq = []
     ambiguous_map = {v: k for k, v in ambiguous_dna_values.items() if v != 'X'}
     for position in range(align.get_alignment_length()):
+        aln = list(align[:, position].replace("X", "").replace(".", ""))
+        alleles, counts = np.unique(aln, return_counts=True)
+        counts = (counts/counts.sum()) * 100
+        filtered_alleles = [a for a, c in zip(alleles, counts) if c >= ignore_percent]
         seq.append(
-            ambiguous_map.get("".join(sorted(set(align[:, position].replace("X", "")))), 'N'))
+            ambiguous_map.get("".join(sorted(filtered_alleles)), 'N'))
     return Seq("".join(seq))
 
 
 
 def get_primer_zones(
-    multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genomes):
+    multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genomes, ignore_percent):
     zone_start, zone_stop, amp_start, amp_stop = get_zone_positions(
         multifasta, amp_start, amp_stop, flank_size)
     align = remove_ignored_genomes(
@@ -59,7 +63,7 @@ def get_primer_zones(
     seq_name = "_".join([str(val) for val in [amp_name, amp_start, amp_stop] if val])
     with open(outfile, 'w') as outfile:
         record = SeqRecord(
-            get_consensus_sequence(align),
+            get_consensus_sequence(align, ignore_percent),
             id=seq_name,
             name=seq_name,
             description=seq_name,

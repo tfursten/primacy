@@ -216,8 +216,13 @@ def optimize(
     multiple=True, default=[],
     help="Ignore genome when identifying ambiguous bases. Repeat option to ignore multiple genomes."
 )
+@click.option(
+    "--ignore-percent", '-p',
+    type=click.IntRange(min=0, max=1), default=0,
+    help="Ignore variants with frequencies less than IGNORE_PERCENT"
+)
 def primer_zones(
-        multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genome):
+        multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genome, ignore_percent):
     """
     Extract ampicon sequence and upstream and downstream primer zones from fasta given 
     the start and stop positions of the amplicon and flank size. A multifasta alignment 
@@ -228,7 +233,9 @@ def primer_zones(
     will need to dealt with separately. For this reason, the alignments should be to a reference
     sequence that has no gaps in the sequence.
     """
-    get_primer_zones(multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genome)
+    get_primer_zones(
+        multifasta, outfile, amp_start, amp_stop,
+        flank_size, amp_name, ignore_genome, ignore_percent)
 
 
 
