@@ -38,7 +38,7 @@ def get_consensus_sequence(align, ignore_percent):
     seq = []
     ambiguous_map = {v: k for k, v in ambiguous_dna_values.items() if v != 'X'}
     for position in range(align.get_alignment_length()):
-        aln = list(align[:, position].replace("X", "").replace(".", ""))
+        aln = list(align[:, position].replace("X", "").replace(".", "").replace("N", ""))
         alleles, counts = np.unique(aln, return_counts=True)
         counts = (counts/counts.sum()) * 100
         filtered_alleles = [a for a, c in zip(alleles, counts) if c >= ignore_percent]
