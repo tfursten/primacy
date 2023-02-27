@@ -3,7 +3,7 @@ import logging
 import os
 from collection import get_primer_collection
 from primer_score import get_primer_ranked_primers
-from optimize import run_optimization
+from optimize import run_optimization, run_simple_optimization
 from primer_zone import get_primer_zones
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -137,6 +137,62 @@ def primer_collection(
 
     
 
+# @cli.command(context_settings=dict(show_default=True))
+# @click.argument(
+#     'PRIMERS', nargs=-1
+# )
+# @click.argument(
+#     'OUTFILE',
+#     type=click.Path(
+#         exists=False, file_okay=True, dir_okay=False, writable=True))
+# @click.option(
+#     '--required-primers', '-r',
+#     type=click.Path(file_okay=True, dir_okay=False, readable=True),
+#     help="Table (tsv) containing primer name and sequences that should be included in solution optimization."
+# )
+# @click.option(
+#     '--max-amp-len', '-mx',
+#     type=click.IntRange(min=0), default=None,
+#     help="Maximum amplicon length."
+# )
+# @click.option(
+#     '--min-amp-len', '-mn',
+#     type=click.IntRange(min=0), default=None,
+#     help="Minimum amplicon length."
+# )
+# @click.option(
+#     '--pop-size', '-s', default=100,
+#     type=click.INT,
+#     help="Size of population for genetic optimization algorithm."
+# )
+# @click.option(
+#     '--iterations', '-it', default=100,
+#     type=click.IntRange(min=0),
+#     help="Number of generations to run the genetic optimization algorithm."
+# )
+# @click.option(
+#     '--mutation', '-mu', default=0.05,
+#     type=click.FloatRange(min=0, max=1),
+#     help="Set probability of a mutation occuring in offspring."
+# )
+# @click.option(
+#     '--crossover', '-xo', default=0.05,
+#     type=click.FloatRange(min=0, max=1),
+#     help="Set propbability of a cross over occuring in offspring."
+# )
+# def optimize(
+#     primers, outfile, required_primers,
+#     max_amp_len, min_amp_len, pop_size,
+#     iterations, mutation, crossover):
+
+#     res = run_optimization(
+#             primers, required_primers,
+#             max_amp_len, min_amp_len, pop_size,
+#             iterations, mutation, crossover)
+#     res.to_csv(outfile, sep='\t', index=False)
+
+
+
 @cli.command(context_settings=dict(show_default=True))
 @click.argument(
     'PRIMERS', nargs=-1
@@ -161,34 +217,14 @@ def primer_collection(
     help="Minimum amplicon length."
 )
 @click.option(
-    '--pop-size', '-s', default=100,
-    type=click.INT,
-    help="Size of population for genetic optimization algorithm."
-)
-@click.option(
-    '--iterations', '-it', default=100,
+    '--sample_sz', '-s', default=10,
     type=click.IntRange(min=0),
-    help="Number of generations to run the genetic optimization algorithm."
+    help="Number of primer pairs to test at each iteration."
 )
-@click.option(
-    '--mutation', '-mu', default=0.05,
-    type=click.FloatRange(min=0, max=1),
-    help="Set probability of a mutation occuring in offspring."
-)
-@click.option(
-    '--crossover', '-xo', default=0.05,
-    type=click.FloatRange(min=0, max=1),
-    help="Set propbability of a cross over occuring in offspring."
-)
-def optimize(
-    primers, outfile, required_primers,
-    max_amp_len, min_amp_len, pop_size,
-    iterations, mutation, crossover):
-
-    res = run_optimization(
-            primers, required_primers,
-            max_amp_len, min_amp_len, pop_size,
-            iterations, mutation, crossover)
+def simple_optimize(
+     primers, outfile, required_primers, max_amp_len, min_amp_len, sample_sz):
+    res = run_simple_optimization(
+            primers, required_primers, max_amp_len, min_amp_len, sample_sz)
     res.to_csv(outfile, sep='\t', index=False)
 
 
