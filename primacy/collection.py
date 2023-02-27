@@ -52,7 +52,10 @@ class Amplicon(object):
                 primers.append(
                     SeqRecord(
                     self.right_flank[pos: pos + size + 1].reverse_complement(),
-                    id="{0}_{1}_{2}_R".format(self.name, pos, size)))
+                    id="{0}_{1}_{2}_R".format(
+                        self.name,
+                        pos + self.left_flank_sz + self.amplicon_sz + size,
+                        size)))
         logger.info(
             "{0}-{1}: {2} primers found with lengths between the range [{3}:{4}]".format(
             self.name, "R", len(primers), min_sz, max_sz 
@@ -102,13 +105,7 @@ def get_primer_position(primer_name):
     Return the far end position of primers based on name.
     Primer names are formated as "{AMPID}_{START}_{LENGTH}_{FLANK}"
     """
-    _, idx, length, flank = primer_name.split("_")
-    if flank == "F":
-        return int(idx)
-    else:
-        return int(idx) + int(length)
-
-
+    return int(primer_name.split("_")[1])
 
 
 def process_primers(primer_list, amp_name, flank, tm_max, tm_min, gc_max,
