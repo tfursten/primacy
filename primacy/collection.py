@@ -178,7 +178,9 @@ def process_primers(primer_list, amp_name, flank, tm_max, tm_min, gc_max,
         "{0}-{1}: {2} primers had melting temperatures (Tm) outside the range [{3}:{4}]".format(
         amp_name, flank, start_sz - primers.shape[0], tm_min, tm_max))
     if primers.shape[0] == 0:
-        logger.warn("Amplicon {0} {1} Flank: No primers passed filter! Use less stringent parameters.")
+        logger.warn("Amplicon {0} {1} Flank: No primers passed filter! Use less stringent parameters.".format(
+            amp_name, flank
+        ))
     return primers
 
 
