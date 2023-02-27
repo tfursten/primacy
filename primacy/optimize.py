@@ -102,7 +102,7 @@ class Panel(object):
             primers.append(locus.forward_primer.seq)
             primers.append(locus.reverse_primer.seq)
         for primer in required_primers:
-            primers.append(primer)
+            primers.append(primer.seq)
         return primers
 
     def mutate(self):
@@ -121,7 +121,6 @@ class Population(object):
         self.max_sz = max_sz
         self.min_sz = min_sz
         self.required_primers = required_primers
-        print(self.required_primers)
         self.primer_options = primer_options
         self.targets = self.primer_options['Amplicon'].unique()
         self.population = self.initialize_population()
@@ -211,7 +210,9 @@ def run_optimization(
         primers.append(pd.read_csv(primer_set, sep="\t", index_col='PrimerName'))
     primers = pd.concat(primers)
     if required_primers:
-        req_primers = list(pd.read_csv(required_primers, sep="\t", header=None, index_col=0, comment="#").index)
+        req_primers = list([
+            Primer(name=n, seq=r.iloc[0]) for n, r in 
+            pd.read_csv(required_primers, sep="\t", header=None, index_col=0, comment="#").iterrows()])
     else:
         req_primers = []
     pop = Population(

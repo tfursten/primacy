@@ -148,7 +148,7 @@ def primer_collection(
 @click.option(
     '--required-primers', '-r',
     type=click.Path(file_okay=True, dir_okay=False, readable=True),
-    help="Fasta file containing primer sequences that should be included in solution optimization."
+    help="Table (tsv) containing primer name and sequences that should be included in solution optimization."
 )
 @click.option(
     '--max-amp-len', '-mx',
