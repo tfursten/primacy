@@ -141,10 +141,10 @@ def primer_collection(
 @click.argument(
     'PRIMERS', nargs=-1
 )
-@click.option(
-    '--outfile', '-o',
-    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True)
-)
+@click.argument(
+    'OUTFILE',
+    type=click.Path(
+        exists=False, file_okay=True, dir_okay=False, writable=True))
 @click.option(
     '--required-primers', '-r',
     type=click.Path(file_okay=True, dir_okay=False, readable=True),
