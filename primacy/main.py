@@ -7,7 +7,7 @@ from optimize import run_optimization
 from primer_zone import get_primer_zones
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
-logger = logging.getLogger('vast')
+logger = logging.getLogger('primacy')
 
 @click.group(context_settings=dict(show_default=True))
 @click.option('--debug/--no-debug', default=False)
