@@ -2,6 +2,7 @@ import logging
 import copy
 import pandas as pd
 import numpy as np
+from numpy.random import default_rng
 import itertools as it
 from Bio.Data.IUPACData import ambiguous_dna_values
 from Bio.Seq import Seq
@@ -18,25 +19,16 @@ class Primer(object):
         self.flank = flank
 
 class PrimerPair(object):
-    def __init__(self, amplicon_table, max_sz, min_sz):
+    def __init__(self, amplicon_table, max_sz, min_sz, seed=None):
         self.max_sz = max_sz
         self.min_sz = min_sz
         self.amplicon_table = amplicon_table
         self.amplicon = amplicon_table['Amplicon'].unique()
+        self.seed = seed
         self.forward_primer, self.reverse_primer = self.get_primer_pair(
             f=None, r=None)
-    
-    def mutate(self, flank=None):
-        if flank == None:
-            flank = np.random.choice(['F', 'R'])
-        if flank == "R":
-            self.forward_primer, self.reverse_primer = self.get_primer_pair(
-                f = self.forward_primer
-            )
-        else:
-            self.forward_primer, self.reverse_primer = self.get_primer_pair(
-                r = self.reverse_primer
-            )
+        
+
 
     def get_primer_pair(self, f=None, r=None):
         """
@@ -46,14 +38,14 @@ class PrimerPair(object):
         if f==None and r==None:
             while True:
                 loop_iter += 1
-                forward = self.amplicon_table[self.amplicon_table['Flank'] == 'F'].sample(1).iloc[0]
+                forward = self.amplicon_table[self.amplicon_table['Flank'] == 'F'].sample(1, random_state=self.seed).iloc[0]
                 reverse = self.amplicon_table[(self.amplicon_table['Flank'] == 'R')]
                 if self.max_sz != None:
                     reverse = reverse[reverse['Position'] <= (forward['Position'] + self.max_sz)]
                 if self.min_sz != None:
                     reverse = reverse[reverse['Position'] >= (forward['Position'] + self.min_sz)]
                 if len(reverse):
-                    reverse = reverse.sample(1).iloc[0]
+                    reverse = reverse.sample(1, random_state=self.seed).iloc[0]
                     break
                 if loop_iter > 1000:
                     raise ValueError(
@@ -67,7 +59,7 @@ class PrimerPair(object):
             if self.min_sz != None:
                 reverse = reverse[reverse['Position'] >= (forward['Position'] + self.min_sz)]
             if len(reverse):
-                reverse = reverse.sample(1).iloc[0]
+                reverse = reverse.sample(1, random_state=self.seed).iloc[0]
             else:
                 # Run again replacing both primers
                 return self.get_primer_pair(f=None, r=None)
@@ -79,7 +71,7 @@ class PrimerPair(object):
             if self.min_sz != None:
                 forward = forward[forward['Position'] >= (reverse['Position'] + self.min_sz)]
             if len(forward):
-                forward = forward.sample(1).iloc[0]
+                forward = forward.sample(1, random_state=self.seed).iloc[0]
             else:
                 return self.get_primer_pair(f=None, r=None)
         return [Primer(seq=forward['Seq'], name=forward.name), Primer(seq=reverse['Seq'], name=reverse.name)]
@@ -228,8 +220,8 @@ def get_result_table(result, primer_options):
 
 
 
-def run_simple_optimization(
-    primer_options, required_primers, max_amp_len, min_amp_len, sample_sz):
+def run_optimization(
+    primer_options, required_primers, max_amp_len, min_amp_len, sample_sz, seed):
     primers = []
     for primer_set in primer_options:
         primers.append(pd.read_csv(primer_set, sep="\t", index_col='PrimerName'))
@@ -240,7 +232,9 @@ def run_simple_optimization(
             pd.read_csv(required_primers, sep="\t", header=None, index_col=0, comment="#").iterrows()])
     else:
         req_primers = []
-    res = simple_optimization(primers, req_primers, sample_sz, max_sz, min_sz)
+    
+
+    res = optimization(primers, req_primers, sample_sz, max_amp_len, min_amp_len, seed)
     return get_result_table(res, primers)
 
     
@@ -265,12 +259,18 @@ def get_all_primer_seqs(primer_pairs, required_primers=[]):
     return primers
 
 
-def simple_optimization(primers, req_primers, reps, max_sz, min_sz):
+def optimization(primers, req_primers, reps, max_sz, min_sz, seed):
     current_panel = []
-    for target in primers['Amplicon'].unique():
+    rng = np.random.default_rng(seed)
+    targets = primers['Amplicon'].unique()
+    rng.shuffle(targets)
+    for target in targets:
+        logger.info("Adding primers for amplicon: {}".format(target))
         amp_table = primers[primers['Amplicon'] == target]
-        primer_pairs = [PrimerPair(amp_table, max_sz, min_sz) for rep in range(reps)]
-        scores = [hybrid_score(get_all_primer_seqs(p), get_all_primer_seqs(current_panel, req_primers)) for p in primer_pairs]
+        primer_pairs = [PrimerPair(amp_table, max_sz, min_sz, seed) for rep in range(reps)]
+        scores = [hybrid_score(get_all_primer_seqs([p]), get_all_primer_seqs(current_panel, req_primers)) for p in primer_pairs]
+        logger.debug("Scores: {}".format(", ".join(list(map(str, scores)))))
+        logger.info("Best Score: {}".format(np.min(scores)))
         current_panel.append(primer_pairs[np.argmin(scores)])
     return current_panel
  

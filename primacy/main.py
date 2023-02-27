@@ -3,7 +3,7 @@ import logging
 import os
 from collection import get_primer_collection
 from primer_score import get_primer_ranked_primers
-from optimize import run_optimization, run_simple_optimization
+from optimize import run_optimization
 from primer_zone import get_primer_zones
 
 logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -221,10 +221,15 @@ def primer_collection(
     type=click.IntRange(min=0),
     help="Number of primer pairs to test at each iteration."
 )
-def simple_optimize(
-     primers, outfile, required_primers, max_amp_len, min_amp_len, sample_sz):
-    res = run_simple_optimization(
-            primers, required_primers, max_amp_len, min_amp_len, sample_sz)
+@click.option(
+    '--seed', '-z', default=None,
+    type=click.INT,
+    help="Seed for random number generation."
+)
+def optimize(
+     primers, outfile, required_primers, max_amp_len, min_amp_len, sample_sz, seed):
+    res = run_optimization(
+            primers, required_primers, max_amp_len, min_amp_len, sample_sz, seed)
     res.to_csv(outfile, sep='\t', index=False)
 
 
