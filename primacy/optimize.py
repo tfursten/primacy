@@ -86,128 +86,150 @@ class PrimerPair(object):
 
 
 
-class Panel(object):
-    def __init__(self, chromosome):
-        self.chromosome = chromosome
+# class Panel(object):
+#     def __init__(self, chromosome):
+#         self.chromosome = chromosome
 
-    def __repr__(self):
-        return "\n".join([",".join([p.forward_primer.name, p.reverse_primer.name]) for p in self.chromosome])
+#     def __repr__(self):
+#         return "\n".join([",".join([p.forward_primer.name, p.reverse_primer.name]) for p in self.chromosome])
     
-    def hybrid_score(self, required_primers=[]):
-        primers = self.get_all_primer_seqs(required_primers)
-        return np.max(np.array(
-            [calculate_hybrid_score(Seq(primers[i]), Seq(primers[j]))
-             for i in range(len(primers) - 1) for j in range(i+1, len(primers))]))
+#     def hybrid_score(self, required_primers=[]):
+#         primers = self.get_all_primer_seqs(required_primers)
+#         return np.max(np.array(
+#             [calculate_hybrid_score(Seq(primers[i]), Seq(primers[j]))
+#              for i in range(len(primers) - 1) for j in range(i+1, len(primers))]))
         
-    def get_all_primer_seqs(self, required_primers=[]):
-        primers = []
-        for locus in self.chromosome:
-            primers.append(locus.forward_primer.seq)
-            primers.append(locus.reverse_primer.seq)
-        for primer in required_primers:
-            primers.append(primer.seq)
-        return primers
+#     def get_all_primer_seqs(self, required_primers=[]):
+#         primers = []
+#         for locus in self.chromosome:
+#             primers.append(locus.forward_primer.seq)
+#             primers.append(locus.reverse_primer.seq)
+#         for primer in required_primers:
+#             primers.append(primer.seq)
+#         return primers
 
-    def mutate(self):
-        np.random.choice(self.chromosome).mutate()
+#     def mutate(self):
+#         np.random.choice(self.chromosome).mutate()
 
-    def crossover(self, start, stop):
-        return self.chromosome[start: stop]
+#     def crossover(self, start, stop):
+#         return self.chromosome[start: stop]
     
 
-class Population(object):
-    def __init__(self, primer_options, required_primers, pop_size, iterations, mut_rate, cross_rate, max_sz, min_sz):
-        self.pop_size = pop_size
-        self.iter = iterations
-        self.mut_rate = mut_rate
-        self.cross_rate = cross_rate
-        self.max_sz = max_sz
-        self.min_sz = min_sz
-        self.required_primers = required_primers
-        self.primer_options = primer_options
-        self.targets = self.primer_options['Amplicon'].unique()
-        self.population = self.initialize_population()
-    def initialize_population(self):
-        pop = []
-        for i in range(self.pop_size):
-            chromosome = []
-            for amp in self.targets:
-                amp_table = self.primer_options[self.primer_options['Amplicon'] == amp]
-                chromosome.append(PrimerPair(amp_table, self.max_sz, self.min_sz))
-            pop.append(Panel(chromosome))
-        return pop
+# class Population(object):
+#     def __init__(self, primer_options, required_primers, pop_size, iterations, mut_rate, cross_rate, max_sz, min_sz):
+#         self.pop_size = pop_size
+#         self.iter = iterations
+#         self.mut_rate = mut_rate
+#         self.cross_rate = cross_rate
+#         self.max_sz = max_sz
+#         self.min_sz = min_sz
+#         self.required_primers = required_primers
+#         self.primer_options = primer_options
+#         self.targets = self.primer_options['Amplicon'].unique()
+#         self.population = self.initialize_population()
+#     def initialize_population(self):
+#         pop = []
+#         for i in range(self.pop_size):
+#             chromosome = []
+#             for amp in self.targets:
+#                 amp_table = self.primer_options[self.primer_options['Amplicon'] == amp]
+#                 chromosome.append(PrimerPair(amp_table, self.max_sz, self.min_sz))
+#             pop.append(Panel(chromosome))
+#         return pop
     
-    def mating(self):
-        offspring = []
-        for i in range(self.pop_size):
-            mate1, mate2 = np.random.choice(self.population, size=2, replace=False)
-            mate1 = Panel(copy.deepcopy(mate1.chromosome))
-            mate2 = Panel(copy.deepcopy(mate2.chromosome))
-            self.mutate(mate1)
-            self.mutate(mate2)
-            self.crossover(mate1, mate2)
-            offspring.append(mate1)
-            offspring.append(mate2)
-        self.population += offspring
+#     def mating(self):
+#         offspring = []
+#         for i in range(self.pop_size):
+#             mate1, mate2 = np.random.choice(self.population, size=2, replace=False)
+#             mate1 = Panel(copy.deepcopy(mate1.chromosome))
+#             mate2 = Panel(copy.deepcopy(mate2.chromosome))
+#             self.mutate(mate1)
+#             self.mutate(mate2)
+#             self.crossover(mate1, mate2)
+#             offspring.append(mate1)
+#             offspring.append(mate2)
+#         self.population += offspring
 
 
-    def mutate(self, panel):
-        if np.random.random() <= self.mut_rate:
-            panel.mutate()
+#     def mutate(self, panel):
+#         if np.random.random() <= self.mut_rate:
+#             panel.mutate()
             
-    def crossover(self, mate1, mate2):
-        # don't do cross over if there is only one amplicon
-        if len(self.targets) == 1:
-            return
-        if np.random.random() <= self.cross_rate:
-            pos = np.random.randint(1, len(self.targets))
-            mate1.chromosome = mate1.crossover(0, pos) + mate2.crossover(pos, len(self.targets))
-            mate2.chromosome = mate2.crossover(0, pos) + mate1.crossover(pos, len(self.targets))
+#     def crossover(self, mate1, mate2):
+#         # don't do cross over if there is only one amplicon
+#         if len(self.targets) == 1:
+#             return
+#         if np.random.random() <= self.cross_rate:
+#             pos = np.random.randint(1, len(self.targets))
+#             mate1.chromosome = mate1.crossover(0, pos) + mate2.crossover(pos, len(self.targets))
+#             mate2.chromosome = mate2.crossover(0, pos) + mate1.crossover(pos, len(self.targets))
     
 
-    def selection(self):
-        fitness = [
-            panel.hybrid_score(required_primers=self.required_primers)
-            for panel in self.population]
-        logger.info(
-            "Population Min Hybrid: {0} Mean Hybrid: {1:.2} Median Hybrid: {2} Max Hybrid {3}".format(
-            min(fitness), np.mean(fitness), np.median(fitness), max(fitness)))
-        # get only the panels with the lowest max hybrid scores
-        fitness_indx = np.argsort(fitness)[:self.pop_size]
-        self.population = list(np.take(self.population, fitness_indx))
+#     def selection(self):
+#         fitness = [
+#             panel.hybrid_score(required_primers=self.required_primers)
+#             for panel in self.population]
+#         logger.info(
+#             "Population Min Hybrid: {0} Mean Hybrid: {1:.2} Median Hybrid: {2} Max Hybrid {3}".format(
+#             min(fitness), np.mean(fitness), np.median(fitness), max(fitness)))
+#         # get only the panels with the lowest max hybrid scores
+#         fitness_indx = np.argsort(fitness)[:self.pop_size]
+#         self.population = list(np.take(self.population, fitness_indx))
 
-    def get_minimum(self):
-        hybrid_scores = [
-            panel.hybrid_score(required_primers=self.required_primers)
-            for panel in self.population]
-        best_idx = np.argmin(hybrid_scores)
-        return self.population[best_idx]
+#     def get_minimum(self):
+#         hybrid_scores = [
+#             panel.hybrid_score(required_primers=self.required_primers)
+#             for panel in self.population]
+#         best_idx = np.argmin(hybrid_scores)
+#         return self.population[best_idx]
         
-    def generation(self):
-        self.mating()
-        self.selection()
+#     def generation(self):
+#         self.mating()
+#         self.selection()
 
-    def run_optimization(self):
-        for gen in range(self.iter):
-            logger.info("Generation {}".format(gen))
-            self.generation()
+#     def run_optimization(self):
+#         for gen in range(self.iter):
+#             logger.info("Generation {}".format(gen))
+#             self.generation()
 
 
 def get_result_table(result, primer_options):
     primers = []
-    for amp in result.chromosome:
-        primers.append(amp.forward_primer.name)
-        primers.append(amp.reverse_primer.name)
+    for ppair in result:
+        primers.append(ppair.forward_primer.name)
+        primers.append(ppair.reverse_primer.name)
     return primer_options.loc[primers]    
 
 # TODO: report amplicon size and max hybrid score for each primer
 
 
-def run_optimization(
-    primer_options, required_primers,
-    max_amp_len, min_amp_len,
-    pop_size, iterations, mutation_rate, crossover_rate):
-    # TODO: validate primer options to ensure that each amplicon has a forward and reverse!
+# def run_optimization(
+#     primer_options, required_primers,
+#     max_amp_len, min_amp_len,
+#     pop_size, iterations, mutation_rate, crossover_rate):
+#     # TODO: validate primer options to ensure that each amplicon has a forward and reverse!
+#     primers = []
+#     for primer_set in primer_options:
+#         primers.append(pd.read_csv(primer_set, sep="\t", index_col='PrimerName'))
+#     primers = pd.concat(primers)
+#     if required_primers:
+#         req_primers = list([
+#             Primer(name=n, seq=r.iloc[0]) for n, r in 
+#             pd.read_csv(required_primers, sep="\t", header=None, index_col=0, comment="#").iterrows()])
+#     else:
+#         req_primers = []
+#     pop = Population(
+#         primers, req_primers, pop_size,
+#         iterations, mutation_rate, crossover_rate, max_amp_len, min_amp_len)
+#     pop.run_optimization()
+#     result = get_result_table(pop.get_minimum(), primers)
+#     return result
+
+
+
+
+def run_simple_optimization(
+    primer_options, required_primers, max_amp_len, min_amp_len, sample_sz):
     primers = []
     for primer_set in primer_options:
         primers.append(pd.read_csv(primer_set, sep="\t", index_col='PrimerName'))
@@ -218,18 +240,40 @@ def run_optimization(
             pd.read_csv(required_primers, sep="\t", header=None, index_col=0, comment="#").iterrows()])
     else:
         req_primers = []
-    pop = Population(
-        primers, req_primers, pop_size,
-        iterations, mutation_rate, crossover_rate, max_amp_len, min_amp_len)
-    pop.run_optimization()
-    result = get_result_table(pop.get_minimum(), primers)
-    return result
+    res = simple_optimization(primers, req_primers, sample_sz, max_sz, min_sz)
+    return get_result_table(res, primers)
+
+    
 
 
+def hybrid_score(new_pair, existing_primers):
+    scores = []
+    for p in new_pair:
+        for e in existing_primers:
+            scores.append(calculate_hybrid_score(p, e))
+    return np.mean(scores)                      
+    
+    
+
+def get_all_primer_seqs(primer_pairs, required_primers=[]):
+    primers = []
+    for pair in primer_pairs:
+        primers.append(Seq(pair.forward_primer.seq))
+        primers.append(Seq(pair.reverse_primer.seq))
+    for primer in required_primers:
+        primers.append(Seq(primer.seq))
+    return primers
 
 
-
-
+def simple_optimization(primers, req_primers, reps, max_sz, min_sz):
+    current_panel = []
+    for target in primers['Amplicon'].unique():
+        amp_table = primers[primers['Amplicon'] == target]
+        primer_pairs = [PrimerPair(amp_table, max_sz, min_sz) for rep in range(reps)]
+        scores = [hybrid_score(get_all_primer_seqs(p), get_all_primer_seqs(current_panel, req_primers)) for p in primer_pairs]
+        current_panel.append(primer_pairs[np.argmin(scores)])
+    return current_panel
+ 
 
 
 
