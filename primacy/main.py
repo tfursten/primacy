@@ -29,7 +29,7 @@ def cli(debug):
     type=click.Path(
         exists=False, file_okay=True, dir_okay=False, writable=True))
 @click.option(
-    '--max-size', '-mx', default=25, type=click.IntRange(min=9, max=40),
+    '--max-size', '-mx', default=30, type=click.IntRange(min=9, max=40),
     help="Max primer size."
 )
 @click.option(
@@ -57,7 +57,7 @@ def cli(debug):
     help="Set upper bound for GC%. GC% is the maximum value for ambiguous primers."
 )
 @click.option(
-    '--gc-min', '-gcmn', default=40,
+    '--gc-min', '-gcmn', default=30,
     type=click.IntRange(min=0, max=100),
     help="Set upper bound for GC%. GC% is the maximum value for ambiguous primers."
 )
