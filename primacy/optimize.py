@@ -245,7 +245,8 @@ def hybrid_score(new_pair, existing_primers):
     for p in new_pair:
         for e in existing_primers:
             scores.append(calculate_hybrid_score(p, e))
-    return np.mean(scores)                      
+    # minimize both the max and average score
+    return np.mean(scores) + np.max(scores)                      
     
     
 
