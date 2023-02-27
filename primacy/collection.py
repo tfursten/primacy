@@ -181,6 +181,8 @@ def process_primers(primer_list, amp_name, flank, tm_max, tm_min, gc_max,
         logger.warn("Amplicon {0} {1} Flank: No primers passed filter! Use less stringent parameters.".format(
             amp_name, flank
         ))
+    else:
+        logger.info("Amplicon {0} {1} Flank: {2} primers passed filter".format(amp_name, flank, primers.shape[0]))
     return primers
 
 
