@@ -22,6 +22,7 @@ class PrimerPair(object):
         self.max_sz = max_sz
         self.min_sz = min_sz
         self.amplicon_table = amplicon_table
+        self.amplicon = amplicon_table['Amplicon'].unique()
         self.forward_primer, self.reverse_primer = self.get_primer_pair(
             f=None, r=None)
     
@@ -55,7 +56,9 @@ class PrimerPair(object):
                     reverse = reverse.sample(1).iloc[0]
                     break
                 if loop_iter > 1000:
-                    raise ValueError("Having trouble finding amplicons of the correct size, please adjust parameters.")
+                    raise ValueError(
+                        "Amplicon {0}: Having trouble finding amplicons of the correct size, please adjust parameters.".format(
+                        self.amplicon))
         elif f != None:
             forward = self.amplicon_table.loc[f.name]
             reverse = self.amplicon_table[(self.amplicon_table['Flank'] == 'R')]
@@ -204,7 +207,7 @@ def run_optimization(
     primer_options, required_primers,
     max_amp_len, min_amp_len,
     pop_size, iterations, mutation_rate, crossover_rate):
-
+    # TODO: validate primer options to ensure that each amplicon has a forward and reverse!
     primers = []
     for primer_set in primer_options:
         primers.append(pd.read_csv(primer_set, sep="\t", index_col='PrimerName'))
