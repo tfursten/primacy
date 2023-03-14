@@ -20,7 +20,7 @@ def remove_ignored_genomes(align, ignore_genomes):
     return align_minus_ignored
     
         
-def get_zone_positions(multifasta, amp_start, amp_stop, flank_size):
+def get_zone_positions(multifasta, amp_start, amp_stop, upstream, downstream):
     """
     Get zone start and stop point by adding flank size to the amp_start and amp_stop.
     If zone is larger than the sequence, adjust the zone to the max length.
@@ -29,8 +29,8 @@ def get_zone_positions(multifasta, amp_start, amp_stop, flank_size):
         for record in SeqIO.parse(handle, 'fasta'):
             seq_len = len(record.seq)
             break
-    zone_start = max(0, amp_start - flank_size)
-    zone_stop = min(seq_len, amp_stop + flank_size)
+    zone_start = max(0, amp_start - upstream)
+    zone_stop = min(seq_len, amp_stop + downstream)
     return zone_start, zone_stop, amp_start - zone_start, amp_stop - zone_start
 
 
@@ -49,9 +49,9 @@ def get_consensus_sequence(align, ignore_percent):
 
 
 def get_primer_zones(
-    multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genomes, ignore_percent):
+    multifasta, outfile, amp_start, amp_stop, upstream, downstream, amp_name, ignore_genomes, ignore_percent):
     zone_start, zone_stop, amp_start, amp_stop = get_zone_positions(
-        multifasta, amp_start, amp_stop, flank_size)
+        multifasta, amp_start, amp_stop, upstream, downstream)
     align = remove_ignored_genomes(
         AlignIO.read(multifasta, "fasta")[:, zone_start : zone_stop + 1], ignore_genomes)
     LOGGER.info(

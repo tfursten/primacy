@@ -253,9 +253,14 @@ def optimize(
     help="End position (inclusive) of the region to amplify"
 )
 @click.option(
-    "--flank-size", '-f',
+    "--upstream", '-u',
+    type=click.IntRange(min=0), defaut=100,
+    help="Maximum size of the upstream primer region."
+)
+@click.option(
+    "--downstream", '-d',
     type=click.IntRange(min=0), default=100,
-    help="Maximum size of the upstream and downstream region.")
+    help="Maximum size of the downstream primer region.")
 @click.option(
     "--amp-name", '-n',
     type=click.STRING, default="",
@@ -272,7 +277,7 @@ def optimize(
     help="Ignore variants with frequencies less than IGNORE_PERCENT"
 )
 def primer_zones(
-        multifasta, outfile, amp_start, amp_stop, flank_size, amp_name, ignore_genome, ignore_percent):
+        multifasta, outfile, amp_start, amp_stop, upstream, downstream, amp_name, ignore_genome, ignore_percent):
     """
     Extract ampicon sequence and upstream and downstream primer zones from fasta given 
     the start and stop positions of the amplicon and flank size. A multifasta alignment 
@@ -285,7 +290,7 @@ def primer_zones(
     """
     get_primer_zones(
         multifasta, outfile, amp_start, amp_stop,
-        flank_size, amp_name, ignore_genome, ignore_percent)
+        upstream, downstream, amp_name, ignore_genome, ignore_percent)
 
 
 
